@@ -6,7 +6,7 @@ import type { ScrapeRequestBody } from "./validators/scrapeRequestBody.ts";
 import { genericErrorHandler } from "./errors/genericErrorHandler.ts";
 import { Logger } from "./utils/logger.ts";
 import { formatScrapeResponse } from "./responseFormatters/scrapeResponseFormatter.ts";
-import { parseHtmlAndExtractLinks } from "./utils/parseHtmlAndExtractLinks.ts";
+import { tryParseHtmlAndExtractLinks } from "./utils/parseHtmlAndExtractLinks.ts";
 
 const server = fastify();
 
@@ -18,7 +18,7 @@ server.post<{ Body: ScrapeRequestBody }>("/scrape", async (request, reply) => {
       request.body
     );
     const html = await loadWebPage(url);
-    const links = await parseHtmlAndExtractLinks({
+    const links = await tryParseHtmlAndExtractLinks({
       html,
       excludeHeaderAndFooter,
     });
@@ -32,8 +32,8 @@ server.post<{ Body: ScrapeRequestBody }>("/scrape", async (request, reply) => {
 
 server.listen({ port: 8080 }, (err, address) => {
   if (err) {
-    console.error(err);
+    serviceLogger.error("An error occurred while starting the server");
     process.exit(1);
   }
-  console.log(`Server listening at ${address}`);
+  serviceLogger.log(`Server listening at ${address}`);
 });
