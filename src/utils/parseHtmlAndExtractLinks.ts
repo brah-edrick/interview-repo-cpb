@@ -64,16 +64,3 @@ export const parseHtmlAndExtractLinks = async ({
     }
   });
 };
-
-export const tryParseHtmlAndExtractLinks = async ({
-  html,
-  excludeHeaderAndFooter,
-}: tryParseHtmlAndExtractLinksParams): Promise<LinkReturnType[]> => {
-  try {
-    return await parseHtmlAndExtractLinks({ html, excludeHeaderAndFooter });
-  } catch (error) {
-    throw new InternalError(
-      "An error occurred while parsing the HTML and extracting links"
-    );
-  }
-};

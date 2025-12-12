@@ -5,9 +5,8 @@ import { validateScrapeRequestBody } from "./validators/scrapeRequestBody.ts";
 import type { ScrapeRequestBody } from "./validators/scrapeRequestBody.ts";
 import { genericErrorHandler } from "./errors/genericErrorHandler.ts";
 import { Logger } from "./utils/logger.ts";
-import { tryParseHtmlAndExtractLinks } from "./utils/parseHtmlAndExtractLinks.ts";
-import { InternalError } from "./errors/internalError.ts";
 import { formatScrapeResponse } from "./responseFormatters/scrapeResponseFormatter.ts";
+import { parseHtmlAndExtractLinks } from "./utils/parseHtmlAndExtractLinks.ts";
 
 const server = fastify();
 
@@ -19,7 +18,7 @@ server.post<{ Body: ScrapeRequestBody }>("/scrape", async (request, reply) => {
       request.body
     );
     const html = await loadWebPage(url);
-    const links = await tryParseHtmlAndExtractLinks({
+    const links = await parseHtmlAndExtractLinks({
       html,
       excludeHeaderAndFooter,
     });
