@@ -14,7 +14,7 @@ const serviceLogger = new Logger("scraper-service");
 
 server.post<{ Body: ScrapeRequestBody }>("/scrape", async (request, reply) => {
   try {
-    const { url, excludeHeaderAndFooter } = validateScrapeRequestBody(
+    const { url, excludeHeaderAndFooter = false } = validateScrapeRequestBody(
       request.body
     );
     const html = await loadWebPage(url);
@@ -23,7 +23,11 @@ server.post<{ Body: ScrapeRequestBody }>("/scrape", async (request, reply) => {
       excludeHeaderAndFooter,
       internalLinkBaseUrl: new URL(url).origin, // use the origin (protocol + hostname) as the base url for storing internal links
     });
-    const formattedResponse = formatScrapeResponse(url, links);
+    const formattedResponse = formatScrapeResponse(
+      url,
+      excludeHeaderAndFooter,
+      links
+    );
     reply.send(formattedResponse);
   } catch (error) {
     const { statusCode, message } = genericErrorHandler(error, serviceLogger);
