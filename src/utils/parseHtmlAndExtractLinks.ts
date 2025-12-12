@@ -76,7 +76,10 @@ const formatInternalLink = (href: string, internalLinkBaseUrl: string) => {
   const normalizedHref =
     href.endsWith("/") && href.length > 1 ? href.slice(0, -1) : href;
   const urlToStore = `${internalLinkBaseUrl}${normalizedHref}`;
-  return urlToStore;
+  const { url: urlObject, error } = tryParseUrl(urlToStore);
+  if (!error && urlObject && urlObject.hostname) {
+    return `${urlObject.hostname}${urlObject.pathname}`;
+  }
 };
 
 const formatExternalLink = (href: string) => {
@@ -96,10 +99,12 @@ const processLink = (
   }
   // format the internal link
   if (href.startsWith("/")) {
-    return {
-      url: formatInternalLink(href, internalLinkBaseUrl),
-      type: "internal",
-    };
+    const internalLink = formatInternalLink(href, internalLinkBaseUrl);
+    if (internalLink) {
+      return { url: internalLink, type: "internal" };
+    }
+    // there is no valid/storable url, so skip it
+    return undefined;
   }
   // format the external link
   const externalLink = formatExternalLink(href);
