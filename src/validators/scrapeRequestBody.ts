@@ -4,7 +4,11 @@ import { tryParseUrl } from "../utils/tryParseUrl.ts";
 
 export type ScrapeRequestBody = {
   url: string;
+  excludeHeaderAndFooter?: boolean;
 };
+
+// this is a list of websites that are allowed to be scraped
+// configured in the .env file or on the deployment environment
 const ALLOWED_WEBSITES = process.env.ALLOWED_WEBSITES?.split(",") || [];
 
 export const validateScrapeRequestBody = (body: object): ScrapeRequestBody => {
@@ -14,11 +18,23 @@ export const validateScrapeRequestBody = (body: object): ScrapeRequestBody => {
     throw new InternalError("Website allowed list is not set");
   }
 
+  const { url, excludeHeaderAndFooter } = body as ScrapeRequestBody;
+
   // if the url is not provided, throw an error
-  const { url } = body as ScrapeRequestBody;
   if (!url) {
     throw new HttpError(
       "A URL is required but not provided",
+      HttpStatusCodes.BAD_REQUEST
+    );
+  }
+
+  // if the excludeHeaderAndFooter is provided, check if it is a boolean
+  if (
+    excludeHeaderAndFooter !== undefined &&
+    typeof excludeHeaderAndFooter !== "boolean"
+  ) {
+    throw new HttpError(
+      "Parameter excludeHeaderAndFooter must be a boolean",
       HttpStatusCodes.BAD_REQUEST
     );
   }
@@ -32,6 +48,7 @@ export const validateScrapeRequestBody = (body: object): ScrapeRequestBody => {
     );
   }
 
+  // check if the hostname is allowed to be scraped
   if (!ALLOWED_WEBSITES.includes(urlObject.hostname)) {
     throw new HttpError(
       `The URL hostname provided ${urlObject.hostname} is not allowed to be scraped`,
@@ -39,5 +56,5 @@ export const validateScrapeRequestBody = (body: object): ScrapeRequestBody => {
     );
   }
 
-  return { url };
+  return { url, excludeHeaderAndFooter };
 };

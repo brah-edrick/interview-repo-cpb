@@ -5,7 +5,8 @@ import { isInternalError } from "./internalError.ts";
 export const genericErrorHandler = (error: unknown, logger: Logger) => {
   // if the error is not an instance of Error, return a generic internal server error and something went very wrong
   if (!(error instanceof Error)) {
-    logger.error("An error occurred but it is not an instance of Error"); // get this into our logging system but not the client
+    // get this into our logging system but not the client
+    logger.error("An error occurred but it is not an instance of Error");
     return {
       statusCode: HttpStatusCodes.INTERNAL_SERVER_ERROR,
       message: "An error occurred",
@@ -14,7 +15,10 @@ export const genericErrorHandler = (error: unknown, logger: Logger) => {
 
   // Internal errors are errors that are not expected to be returned to the client
   if (isInternalError(error)) {
-    logger.error(error.message); // get this into our logging system but not the client
+    // get this into our logging system but not the client
+    // we could also ship things off to a monitoring service here
+    logger.error(error.message);
+
     return {
       statusCode: HttpStatusCodes.INTERNAL_SERVER_ERROR,
       message: "An internal server error occurred",

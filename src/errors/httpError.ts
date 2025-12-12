@@ -11,7 +11,7 @@ export const HttpStatusCodes = {
   SERVICE_UNAVAILABLE: 503,
 } as const;
 
-export type HttpStatusCodes =
+export type HttpStatusCode =
   (typeof HttpStatusCodes)[keyof typeof HttpStatusCodes];
 
 // http error class for errors that should be returned to the client

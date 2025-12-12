@@ -17,3 +17,25 @@ Expose the screenscraping logic behind a single RESTful API route where a POST r
 ### Error Handling
 
 If someone provides a URL that is not a CPB URL, gracefully error out with a 4XX error status code and detailed message highlighting the error.
+
+## API Usage
+
+### Basic Scrape
+
+Scrape a URL and extract all links (including header and footer):
+
+```bash
+curl -X POST http://localhost:8080/scrape \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.cpb.bank/"}'
+```
+
+### Scrape Excluding Header and Footer
+
+Scrape a URL and exclude links from the header and footer:
+
+```bash
+curl -X POST http://localhost:8080/scrape \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.cpb.bank/", "excludeHeaderAndFooter": true}'
+```

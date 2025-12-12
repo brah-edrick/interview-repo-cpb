@@ -7,6 +7,7 @@ import { genericErrorHandler } from "./errors/genericErrorHandler.ts";
 import { Logger } from "./utils/logger.ts";
 import { tryParseHtmlAndExtractLinks } from "./utils/parseHtmlAndExtractLinks.ts";
 import { InternalError } from "./errors/internalError.ts";
+import { formatScrapeResponse } from "./responseFormatters/scrapeResponseFormatter.ts";
 
 const server = fastify();
 
@@ -14,28 +15,16 @@ const serviceLogger = new Logger("scraper-service");
 
 server.post<{ Body: ScrapeRequestBody }>("/scrape", async (request, reply) => {
   try {
-    const { url } = validateScrapeRequestBody(request.body);
+    const { url, excludeHeaderAndFooter } = validateScrapeRequestBody(
+      request.body
+    );
     const html = await loadWebPage(url);
-    const baseUrl = new URL(url).host;
-    const { links, error } = await tryParseHtmlAndExtractLinks(html, baseUrl);
-    if (error) {
-      throw new InternalError(
-        "An error occurred while parsing the HTML and extracting links"
-      );
-    }
-    reply.send({
-      meta: {
-        url,
-        totalLinks: links.length,
-        totalInternalLinks: links.filter((link) => link.type === "internal")
-          .length,
-        totalExternalLinks: links.filter((link) => link.type === "external")
-          .length,
-      },
-      data: {
-        links,
-      },
+    const links = await tryParseHtmlAndExtractLinks({
+      html,
+      excludeHeaderAndFooter,
     });
+    const formattedResponse = formatScrapeResponse(url, links);
+    reply.send(formattedResponse);
   } catch (error) {
     const { statusCode, message } = genericErrorHandler(error, serviceLogger);
     reply.status(statusCode).send({ error: message });
