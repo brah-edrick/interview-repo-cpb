@@ -20,6 +20,14 @@ If someone provides a URL that is not a CPB URL, gracefully error out with a 4XX
 
 ## API Usage
 
+### `.env` setup
+
+Be sure to include the hosts you want to allow scraping of by setting `ALLOWED_WEBSITES`
+
+```bash
+ALLOWED_WEBSITES=www.cpb.bank
+```
+
 ### Basic Scrape
 
 Scrape a URL and extract all links (including header and footer):
@@ -38,4 +46,24 @@ Scrape a URL and exclude links from the header and footer:
 curl -X POST http://localhost:8080/scrape \
   -H "Content-Type: application/json" \
   -d '{"url": "https://www.cpb.bank/", "excludeHeaderAndFooter": true}'
+```
+
+### Scrape a page that doesn't exist
+
+Expect this to 404
+
+```bash
+curl -X POST http://localhost:8080/scrape \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.cpb.bank/fooooooo"}'
+```
+
+### Scrape an non-allowed site
+
+Scrape a URL for a site that isn't in the allow list by host
+
+```bash
+curl -X POST http://localhost:8080/scrape \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.google.com/"}'
 ```
