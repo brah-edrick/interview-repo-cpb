@@ -21,6 +21,7 @@ server.post<{ Body: ScrapeRequestBody }>("/scrape", async (request, reply) => {
     const links = await tryParseHtmlAndExtractLinks({
       html,
       excludeHeaderAndFooter,
+      internalLinkBaseUrl: new URL(url).origin, // use the origin (protocol + hostname) as the base url for storing internal links
     });
     const formattedResponse = formatScrapeResponse(url, links);
     reply.send(formattedResponse);

@@ -31,7 +31,7 @@ export const loadWebPage = async (url: string) => {
     // return the html of the web page
     return response.text();
   } catch (error) {
-    if (isHttpError(error)) {
+    if (error instanceof Error && isHttpError(error)) {
       throw error;
     }
     throw new InternalError("An error occurred while loading the web page");

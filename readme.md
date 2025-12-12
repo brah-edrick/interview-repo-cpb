@@ -18,7 +18,7 @@ Expose the screenscraping logic behind a single RESTful API route where a POST r
 
 If someone provides a URL that is not a CPB URL, gracefully error out with a 4XX error status code and detailed message highlighting the error.
 
-## API Usage
+# API Usage
 
 ### `.env` setup
 

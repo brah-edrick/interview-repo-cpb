@@ -12,11 +12,13 @@ export type LinkReturnType = {
 type tryParseHtmlAndExtractLinksParams = {
   html: string;
   excludeHeaderAndFooter?: boolean;
+  internalLinkBaseUrl: string;
 };
 
 export const parseHtmlAndExtractLinks = async ({
   html,
   excludeHeaderAndFooter,
+  internalLinkBaseUrl,
 }: tryParseHtmlAndExtractLinksParams) => {
   if (excludeHeaderAndFooter) {
     // remove header and footer from the html
@@ -26,32 +28,19 @@ export const parseHtmlAndExtractLinks = async ({
   }
   return new Promise<LinkReturnType[]>((resolve) => {
     const $ = cheerio.load(html);
-    const linksMap = new Map<string, string>(); // use a map to avoid duplicates
+    // use a map to avoid duplicates
+    const linksMap = new Map<string, string>();
     $("a").each((_, anchorElement) => {
       let href = $(anchorElement).attr("href");
-      if (href) {
-        // clean up some common cases
-        if (href.startsWith("#")) {
-          return; // skip hash links
-        }
-        if (href.startsWith("/")) {
-          // if the href is a relative link, set the type to internal and store it as is
-          linksMap.set(href, "internal");
-          return;
-        }
 
-        const { url: urlObject, error } = tryParseUrl(href);
-        if (error || !urlObject || !urlObject.hostname) {
-          // if the href is not a valid url OR the hostname is not set, skip it
-          // hostname may not be set for parseable urls that are protocol based like javascript:void(0) or mailto: or tel:
-          return;
-        }
-        // strip hash and query params
-        const urlToStore = `${urlObject.hostname}${urlObject.pathname}`;
-        linksMap.set(urlToStore, "external");
-        return;
+      const link = processLink(href, internalLinkBaseUrl);
+      if (link) {
+        storeLink(link.url, link.type, linksMap);
       }
+      return;
     });
+
+    // convert the map to an array of LinkReturnType
     resolve(
       Array.from(linksMap.entries()).map(([url, type]) => ({
         url,
@@ -61,15 +50,70 @@ export const parseHtmlAndExtractLinks = async ({
   });
 };
 
+// wrapper function to handle errors
+
 export const tryParseHtmlAndExtractLinks = async ({
   html,
   excludeHeaderAndFooter,
+  internalLinkBaseUrl,
 }: tryParseHtmlAndExtractLinksParams): Promise<LinkReturnType[]> => {
   try {
-    return await parseHtmlAndExtractLinks({ html, excludeHeaderAndFooter });
+    return await parseHtmlAndExtractLinks({
+      html,
+      excludeHeaderAndFooter,
+      internalLinkBaseUrl,
+    });
   } catch (error) {
     throw new InternalError(
       "An error occurred while parsing the HTML and extracting links"
     );
   }
+};
+
+// local helper functions
+
+const formatInternalLink = (href: string, internalLinkBaseUrl: string) => {
+  const normalizedHref =
+    href.endsWith("/") && href.length > 1 ? href.slice(0, -1) : href;
+  const urlToStore = `${internalLinkBaseUrl}${normalizedHref}`;
+  return urlToStore;
+};
+
+const formatExternalLink = (href: string) => {
+  const { url: urlObject, error } = tryParseUrl(href);
+  if (!error && urlObject && urlObject.hostname) {
+    return `${urlObject.hostname}${urlObject.pathname}`;
+  }
+  return null;
+};
+
+const processLink = (
+  href: string | undefined,
+  internalLinkBaseUrl: string
+): LinkReturnType | undefined => {
+  if (!href) {
+    return undefined;
+  }
+  // format the internal link
+  if (href.startsWith("/")) {
+    return {
+      url: formatInternalLink(href, internalLinkBaseUrl),
+      type: "internal",
+    };
+  }
+  // format the external link
+  const externalLink = formatExternalLink(href);
+  if (externalLink) {
+    return { url: externalLink, type: "external" };
+  }
+  // there is no valid/storable url, so skip it
+  return undefined;
+};
+
+const storeLink = (
+  url: string,
+  type: LinkType,
+  linksMap: Map<string, string> // reference to the map
+) => {
+  linksMap.set(url, type);
 };
