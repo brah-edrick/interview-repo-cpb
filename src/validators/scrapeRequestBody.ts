@@ -52,7 +52,7 @@ export const validateScrapeRequestBody = (body: object): ScrapeRequestBody => {
   if (!ALLOWED_WEBSITES.includes(urlObject.hostname)) {
     throw new HttpError(
       `The URL hostname provided ${urlObject.hostname} is not allowed to be scraped`,
-      HttpStatusCodes.BAD_REQUEST
+      HttpStatusCodes.FORBIDDEN
     );
   }
 
