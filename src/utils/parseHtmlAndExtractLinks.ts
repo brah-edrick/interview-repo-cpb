@@ -1,6 +1,5 @@
 import * as cheerio from "cheerio";
 import { tryParseUrl } from "./tryParseUrl.ts";
-import { InternalError } from "../errors/internalError.ts";
 
 type LinkType = "internal" | "external";
 
